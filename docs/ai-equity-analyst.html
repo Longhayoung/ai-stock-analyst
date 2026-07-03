@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Equity Analyst — Hayoung</title>
+<meta name="description" content="A multi-step LLM pipeline that turns a stock ticker into a one-page investment briefing.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #fcf5e0;
+    --cream-deep: #f6e7bf;
+    --milky: #cfe4ef;
+    --milky-deep: #a9cee0;
+    --blue: #6f9db8;
+    --blue-ink: #4d7893;
+    --ink: #5c4a37;
+    --ink-soft: #8f7c64;
+    --card: #fffdf6;
+    --line: #e3d5ad;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Quicksand", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", sans-serif;
+    color: var(--ink);
+    background-color: var(--cream);
+    background-image: radial-gradient(var(--cream-deep) 1.1px, transparent 1.2px);
+    background-size: 22px 22px;
+    line-height: 1.68;
+  }
+  a { color: var(--blue-ink); }
+  .wrap { max-width: 820px; margin: 0 auto; padding: 0 22px; }
+
+  .topbar { padding: 26px 0 0; }
+  .back { text-decoration: none; font-weight: 600; font-size: 15px; color: var(--ink); }
+  .back:hover { color: var(--blue-ink); }
+
+  header.hero { text-align: center; padding: 34px 0 40px; border-bottom: 2px dashed var(--line); }
+  .tag {
+    display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--blue-ink); background: var(--milky);
+    border: 1.5px dashed var(--milky-deep); padding: 5px 14px; border-radius: 999px;
+    transform: rotate(-2deg); margin-bottom: 20px;
+  }
+  h1 { font-family: "Fraunces", Georgia, serif; font-weight: 600; font-size: 46px; margin: 0 0 14px; }
+  .tagline { font-size: 18px; color: var(--ink-soft); max-width: 600px; margin: 0 auto 26px; }
+  .links { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .pill {
+    text-decoration: none; font-weight: 600; font-size: 15px; padding: 10px 20px;
+    border-radius: 999px; border: 2px solid var(--ink); background: var(--cream);
+    color: var(--ink); box-shadow: 3px 3px 0 var(--ink); transition: transform .1s, box-shadow .1s;
+  }
+  .pill:hover { transform: translate(1px,1px); box-shadow: 2px 2px 0 var(--ink); }
+  .pill.blue { background: var(--milky); }
+
+  section { padding: 40px 0; border-bottom: 2px dashed var(--line); }
+  h2 { font-family: "Fraunces", Georgia, serif; font-style: italic; font-size: 27px; margin: 0 0 16px; }
+  p.lead { color: var(--ink-soft); margin-top: 0; }
+
+  pre.diagram {
+    background: var(--card); border: 2px solid var(--ink); border-radius: 16px;
+    box-shadow: 4px 4px 0 var(--cream-deep);
+    padding: 20px; overflow-x: auto; font-size: 12.5px; line-height: 1.5; color: var(--ink);
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 10px; }
+  .chip {
+    background: var(--card); border: 2px solid var(--ink); border-radius: 999px;
+    padding: 7px 16px; font-size: 14px; font-weight: 600; box-shadow: 2px 2px 0 var(--milky-deep);
+  }
+
+  .report-card {
+    background: var(--card); border: 2px solid var(--ink); border-radius: 20px;
+    box-shadow: 6px 6px 0 var(--milky-deep); padding: 6px 30px 26px; margin-top: 18px;
+  }
+  .report-meta {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    border-bottom: 2px dashed var(--line); padding: 18px 0 14px; margin-bottom: 4px;
+    color: var(--ink-soft); font-size: 14px; font-weight: 600;
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--blue); display: inline-block; }
+  .report-card h1 { font-size: 24px; margin: 22px 0 6px; }
+  .report-card h2 {
+    font-family: "Fraunces", Georgia, serif; font-style: normal; font-size: 21px;
+    margin: 26px 0 10px; padding-bottom: 6px; border-bottom: 1.5px solid var(--line); color: var(--blue-ink);
+  }
+  .report-card h3 { font-size: 16px; margin: 18px 0 6px; color: var(--ink); }
+  .report-card ul { padding-left: 22px; }
+  .report-card li { margin: 5px 0; }
+  .report-card strong { color: var(--ink); }
+  .report-card em { color: var(--ink-soft); }
+
+  .disclaimer {
+    background: var(--milky); border: 2px dashed var(--milky-deep); border-radius: 14px;
+    padding: 15px 20px; color: var(--blue-ink); font-size: 14px; font-weight: 500; margin-top: 18px;
+  }
+  footer { text-align: center; padding: 40px 0 70px; color: var(--ink-soft); font-size: 14px; }
+  footer a { font-weight: 600; }
+
+  @media (max-width: 600px) {
+    h1 { font-size: 36px; }
+    .report-card { padding: 6px 18px 22px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap topbar">
+  <a class="back" href="index.html">&larr; Back to projects</a>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="tag">LLM · Finance</span>
+    <h1>AI Equity Analyst</h1>
+    <p class="tagline">A multi-step LLM pipeline that turns a stock ticker into a one-page
+      investment briefing — live fundamentals and news, synthesized by three chained GPT calls.</p>
+    <div class="links">
+      <a class="pill blue" href="https://github.com/Longhayoung/ai-stock-analyst" target="_blank" rel="noopener">View on GitHub</a>
+      <a class="pill" href="#report">See a sample report</a>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <h2>How it works</h2>
+    <p class="lead">Every LLM call is stateless, so each stage's output is passed into the next.
+      Two extraction stages feed a final synthesis stage that reconciles the numbers with the narrative.</p>
+    <pre class="diagram">ticker
+  |
+  |-- [1] Fundamental analyst   <- yfinance .info   (valuation, margins, growth, balance sheet)
+  |         notes: Strengths / Concerns / Metrics to watch
+  |
+  |-- [2] News analyst          <- yfinance .news   (recent headlines + summaries)
+  |         notes: Tone / Key developments / Risks
+  |
+  |-- [3] Senior analyst        <- combines notes [1] + [2]
+            final report: Snapshot, Fundamentals, News, Fundamentals vs News,
+            Outlook by Horizon, Bottom Line   (streamed live)</pre>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Built with</h2>
+    <div class="chips">
+      <span class="chip">Python</span>
+      <span class="chip">yfinance</span>
+      <span class="chip">OpenAI API</span>
+      <span class="chip">python-dotenv</span>
+      <span class="chip">Jupyter</span>
+    </div>
+  </div>
+</section>
+
+<section id="report">
+  <div class="wrap">
+    <h2>Sample report</h2>
+    <p class="lead">Generated by <code>create_report("AAPL")</code>. This is example output —
+      the tool produces a fresh report from live data each time it runs.</p>
+    <div class="report-card">
+      <div class="report-meta"><span class="dot"></span> AI-generated &middot; AAPL &middot; example run</div>
+      <div id="report-body">Loading report...</div>
+    </div>
+    <div class="disclaimer">For informational and educational purposes only — not investment
+      advice. Output is AI-generated from public data and may be incomplete or inaccurate.</div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    Made by Hayoung &middot; <a href="https://github.com/Longhayoung/ai-stock-analyst" target="_blank" rel="noopener">Source on GitHub</a>
+  </div>
+</footer>
+
+<script id="report-md" type="text/markdown">
+## Snapshot
+
+- **Stock:** AAPL
+- **Price (approx):** $305.93; 52-week range $201.50–$317.40
+- **Market cap:** ~$4.49T
+- **Key metrics (fundamentals):** Trailing P/E ~37x; Forward P/E ~31.8x; P/S ~9.95x; P/B ~42x; PEG ~2.3
+- **Balance sheet signals:** Debt/Equity ~79.5x; Quick ratio 0.91; Current ratio 1.07; Cash $68.5B vs. Debt $84.7B
+- **Cash flow:** Free cash flow ~$101.1B; Operating cash flow ~$140.2B
+- **Profitability:** Gross margin 47.9%; Operating margin 32.3%; Net margin 27.2%; ROA 26.2%; ROE 141%
+- **Shareholder returns:** Dividend yield ~0.37%; payout ratio ~12.6%
+- **Analyst view:** Consensus Buy; mean target ~$315.09 vs price ~$306 (modest upside)
+- **Notable risks:** iPhone cycle sensitivity, regulatory/antitrust risk, macro/regional exposure, high valuation
+
+## Fundamentals
+
+**Strengths**
+- Scale and leadership: Large revenue base (~$451.44B) with strong profitability and very high ROE driven by buybacks.
+- Cash generation: FCF ~$101.1B and OCF ~$140.2B support buybacks/dividends and balance-sheet flexibility.
+- Returns to shareholders: Dividend yield sub-1% but stable payout policy.
+
+**Concerns**
+- Valuation: Rich multiples (trailing P/E ~37x; forward ~31.8x; P/S ~9.95x; P/B ~42x; PEG ~2.3).
+- Leverage and liquidity: Debt/Equity appears very high (~79.5x) with quick ratio 0.91 and current ratio 1.07; cash balance modest relative to debt.
+- Concentration and risk: Significant exposure to the iPhone cycle; regulatory/antitrust and geopolitical risks (China, supply chain) add valuation and execution risk.
+- Valuation risk: Price near 52-week high; potential multiple compression if growth slows.
+
+**Key metrics to watch**
+- Forward EPS ~9.61; Revenue growth ~16.6%; Earnings growth ~21.8%
+- Ongoing FCF stability (~$101B) and capital allocation via buybacks/dividends
+- Valuation snapshots: forward P/E 28–32x, EV/EBITDA ~27x, P/S ~10x
+- Price momentum: current ~$306; 50/200-day averages at ~$292.67 / $270.33
+
+## Recent News
+
+**Overall tone:** Mixed. Foldable iPhone expansion and regional demand strength offset by China softness and AI-driven upgrade skepticism, plus memory-supply/geopolitical chatter.
+
+**Key developments**
+- Foldables: Apple eyes ~10 million foldable iPhones; production forecast significantly raised, signaling major expansion in foldable strategy.
+- Regional demand: US/Europe demand improving; China softness adds a regional overhang.
+- AI-driven upgrades: UBS survey indicates AI features are not driving stronger iPhone upgrade activity.
+- China memory supply: Rumor of CXMT being explored as a supplier; could shift competitive dynamics with Micron amid geopolitical considerations.
+
+**Risks to watch**
+- Ongoing China demand weakness and regulatory/geopolitical tensions affecting margins and mix.
+- Potential China-sourced memory supplies altering US exposure; supply-chain decoupling risks.
+- AI upgrade tailwinds may be limited, tempering upside from AI features.
+
+## Fundamentals vs News
+
+**Agree**
+- Strong cash generation and shareholder-return framework (FCF, OCF, buybacks) align with a durable, high-quality balance sheet that supports optionality.
+- Foldables and improving US/Europe demand implied by fundamentals are supported by news of broader product-strategy expansion and regional resilience.
+
+**Conflict**
+- China softness and regulatory/geopolitical tensions in the news conflict with the geographic diversification suggested by the fundamentals; China exposure remains a meaningful risk.
+- AI-driven upgrade tailwinds appear uncertain per news (UBS survey), tempering the upbeat growth narrative implied by forward metrics (revenue growth ~16.6%, earnings growth ~21.8%).
+
+**Neutral**
+- Foldable iPhone expansion adds optionality not yet reflected in hard revenue numbers — a strategic signal rather than a stated financial assumption.
+
+## Outlook by Horizon
+
+**Short-term (weeks–months)**
+- Bull case: Foldable production ramp and regional demand improvements could support near-term strength; buybacks provide downside protection.
+- Bear case: China demand weakness and geopolitics amplify macro risk; limited AI-upgrade tailwinds may temper upside.
+
+**Medium-term (6–18 months)**
+- Bull case: Sustained cash generation supports buybacks and multiple support as product cycles lift revenue growth (~16%) and earnings growth (>20%). Improved US/Europe demand could reduce China reliance.
+- Bear case: Persistent high multiple risks compression if growth slows or tensions intensify; memory/China supply-chain risks could disrupt margins.
+
+**Long-term (multi-year)**
+- Bull case: Ecosystem and services, hardware expansion (incl. foldables), and potential AI features could sustain durable growth and high profitability; strong FCF supports long-run value creation.
+- Bear case: Rich valuation plus execution risk around regulation, China exposure, and memory-supply shifts could cap multi-year upside.
+
+## Bottom Line
+
+Apple displays robust profitability and cash generation with durable competitive advantages and optionality (notably foldable iPhone expansion) that could support mid-to-long-term growth. The news backdrop adds important risk: China softness, regulatory/geopolitical tensions, and mixed signals on AI-driven upgrades, which could temper near-term momentum and cap multiple expansion. The stock trades at premium multiples consistent with a best-in-class platform, so upside hinges on executing foldable and regional demand growth while managing geopolitical and supply-chain risks.
+
+*This report is for informational purposes only and is not investment advice.*
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+  (function () {
+    var md = document.getElementById('report-md').textContent;
+    var target = document.getElementById('report-body');
+    if (window.marked && md) { target.innerHTML = marked.parse(md); }
+    else { target.textContent = 'Could not render report.'; }
+  })();
+</script>
+
+</body>
+</html>
