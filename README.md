@@ -108,18 +108,6 @@ ai-stock-analyst/
 
 ---
 
-## Publish the website (GitHub Pages)
-
-1. Push this repo to GitHub.
-2. Go to **Settings > Pages**.
-3. Under *Build and deployment*, set **Source: Deploy from a branch**.
-4. Choose branch **`main`** and folder **`/docs`**, then **Save**.
-5. After a minute the site is live at `https://Longhayoung.github.io/ai-stock-analyst/`.
-
-To add a future project, add a card to `docs/index.html` and create a new detail page next
-to `ai-equity-analyst.html`.
-
----
 
 ## What I learned
 
@@ -132,7 +120,7 @@ to `ai-equity-analyst.html`.
   `json.dumps()` instead of relying on tutorials.
 - **Structured, format-locked prompts** keep results consistent across many tickers.
 
-Built while following an LLM engineering course — extending the Week 1 "brochure generator"
+Built while following an Ed Donner's LLM engineering course — extending the Week 1 "brochure generator"
 idea into a real, reusable finance tool.
 
 ---
